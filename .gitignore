@@ -1,0 +1,6 @@
+.idea/
+.venv/
+cmake-build-*/
+build/
+data/
+plots/
