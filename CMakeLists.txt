@@ -11,4 +11,7 @@ add_executable(
         src/utils_improved.hpp
         src/uhr/uhr_utils.hpp
         src/uhr/uhr.hpp
+        src/brute_force/brute_force.hpp
+        src/divide_and_conquer/divide_and_conquer.cpp
+        src/divide_and_conquer/divide_and_conquer.hpp
 )
