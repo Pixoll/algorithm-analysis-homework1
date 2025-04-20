@@ -28,7 +28,7 @@
  * @param runs Number of runs per test case. Should be >= 32.
  * @param lower Range of test cases. Should be > 0.
  * @param upper Range of test cases. Should be > 0.
- * @param step Range of test cases. Should be > 0.
+ * @param step Step of test cases. Should be > 0.
  * @param generator_min Min value the int_generator passed to setup_fn should generate.
  * @param generator_max Max value the int_generator passed to setup_fn should generate.
  * @param setup_fn Function to call on test setup.
