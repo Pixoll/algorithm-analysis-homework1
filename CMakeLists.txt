@@ -7,6 +7,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
 add_executable(
         algorithm_analysis_homework1
         src/main.cpp
+        src/args.hpp
         src/common.hpp
         src/utils.hpp
         src/utils_improved.hpp

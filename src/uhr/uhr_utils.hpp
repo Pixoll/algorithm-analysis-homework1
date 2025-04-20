@@ -30,7 +30,7 @@ public:
 };
 
 inline void validate_input(const uint64_t runs, const uint64_t lower, const uint64_t upper, const uint64_t step) {
-    using std::cerr, std::endl;
+    using std::cerr, std::endl, std::exit;
 
     if (runs < MIN_RUNS) {
         cerr << "<RUNS> must be at least " << MIN_RUNS << '.' << endl;
