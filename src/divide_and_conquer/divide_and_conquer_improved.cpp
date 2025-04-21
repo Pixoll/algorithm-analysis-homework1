@@ -35,6 +35,9 @@ inline uint64_t divide_and_conquer_crossing_improved(
         const auto &p1 = within_range[i];
         for (size_t j = i + 1; j < i + 7 && j < range_size; j++) {
             const uint64_t distance = get_pseudo_distance(p1, within_range[j]);
+            if (distance == 0)
+                return 0;
+
             min_distance = MIN(min_distance, distance);
         }
     }
@@ -71,7 +74,13 @@ inline uint64_t divide_and_conquer_recursive_improved( // NOLINT(*-no-recursion)
     }
 
     const uint64_t min_distance_left = divide_and_conquer_recursive_improved(sorted_x, sorted_y_left, low, mid);
+    if (min_distance_left == 0)
+        return 0;
+
     const uint64_t min_distance_right = divide_and_conquer_recursive_improved(sorted_x, sorted_y_right, mid, high);
+    if (min_distance_right == 0)
+        return 0;
+
     const uint64_t distance_delta = MIN(min_distance_left, min_distance_right);
     const uint64_t min_distance_crossing = divide_and_conquer_crossing_improved(sorted_y, mid_x, distance_delta);
 

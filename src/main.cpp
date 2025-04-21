@@ -1,7 +1,6 @@
 #include <filesystem>
 #include <functional>
 #include <string>
-#include <unordered_set>
 
 #include "args.hpp"
 #include "brute_force/brute_force.hpp"
@@ -12,14 +11,14 @@
 
 const std::string DATA_DIR = "../data";
 
-points_t setup(const uint64_t n, int_generator<uint64_t> &generator) {
-    std::unordered_set<Point, point_hash> points_set(n);
+inline points_t setup(const uint64_t n, int_generator<coord_t> &generator) {
+    points_t points(n);
 
-    while (points_set.size() < n) {
-        points_set.emplace(generator(), generator());
+    for (size_t i = 0; i < n; i++) {
+        points[i] = {generator(), generator()};
     }
 
-    return {points_set.begin(), points_set.end()};
+    return points;
 }
 
 void run_uhr(
@@ -27,7 +26,7 @@ void run_uhr(
     const std::function<double(const points_t &)> &fn_to_test,
     const ParsedArgs &args
 ) {
-    uhr<uint64_t, points_t, double>(
+    uhr<coord_t, points_t, double>(
         filePath,
         args.runs,
         args.lower,

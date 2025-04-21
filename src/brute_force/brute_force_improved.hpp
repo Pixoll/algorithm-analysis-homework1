@@ -14,6 +14,9 @@ inline double brute_force_improved(const points_t &points) {
         const auto &p1 = points[i];
         for (size_t j = i + 1; j < size; j++) {
             const uint64_t distance = get_pseudo_distance(p1, points[j]);
+            if (distance == 0)
+                return 0;
+
             min_distance = MIN(min_distance, distance);
         }
     }
@@ -28,6 +31,9 @@ inline uint64_t brute_force_range_improved(const points_t &points, const size_t 
         const auto &p1 = points[i];
         for (size_t j = i + 1; j < high; j++) {
             const uint64_t distance = get_pseudo_distance(p1, points[j]);
+            if (distance == 0)
+                return 0;
+
             min_distance = MIN(min_distance, distance);
         }
     }
