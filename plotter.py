@@ -46,9 +46,9 @@ def process_csv_file(file_path: Path) -> FitData:
     plt.subplot2grid((4, 4), (0, 0), 2, 2)
     plt.errorbar(df["n"], df["t_mean"], yerr=df["t_stdev"], fmt="o-", capsize=5,
                  ecolor="red", color="blue", markersize=5)
-    plt.title(f"Mean Execution Time with Standard Deviation - {base_filename}", fontsize=14)
-    plt.xlabel("Number of Elements (n)", fontsize=12)
-    plt.ylabel("Mean Time (ns)", fontsize=12)
+    plt.title(f"Mean Execution Time with Standard Deviation - {base_filename}", fontsize=16)
+    plt.xlabel("Number of Elements (n)", fontsize=16)
+    plt.ylabel("Mean Time (ns)", fontsize=16)
     plt.grid(True, linestyle="--", alpha=0.7)
 
     plt.subplot2grid((4, 4), (0, 2), 2, 2)
@@ -57,10 +57,10 @@ def process_csv_file(file_path: Path) -> FitData:
     plt.plot(df["n"], df["t_Q2"], "^-", label="Median (Q2)")
     plt.plot(df["n"], df["t_Q3"], "d-", label="Q3")
     plt.plot(df["n"], df["t_Q4"], "x-", label="Maximum (Q4)")
-    plt.title(f"Quartile Values vs. Number of Elements - {base_filename}", fontsize=14)
-    plt.xlabel("Number of Elements (n)", fontsize=12)
-    plt.ylabel("Time (ns)", fontsize=12)
-    plt.legend()
+    plt.title(f"Quartile Values vs. Number of Elements - {base_filename}", fontsize=16)
+    plt.xlabel("Number of Elements (n)", fontsize=16)
+    plt.ylabel("Time (ns)", fontsize=16)
+    plt.legend(fontsize=16, loc="best")
     plt.grid(True, linestyle="--", alpha=0.7)
 
     plt.subplot2grid((4, 4), (2, 1), 2, 2)
@@ -140,13 +140,13 @@ def process_csv_file(file_path: Path) -> FitData:
             fit_data.equation = model_equation
             fit_data.type = model_type
 
-    plt.title(f"Mean Time vs. Number of Elements with {model_type} - {base_filename}", fontsize=14)
-    plt.xlabel("Number of Elements (n)", fontsize=12)
-    plt.ylabel("Mean Time (ns)", fontsize=12)
+    plt.title(f"Mean Time vs. Number of Elements with {model_type} - {base_filename}", fontsize=16)
+    plt.xlabel("Number of Elements (n)", fontsize=16)
+    plt.ylabel("Mean Time (ns)", fontsize=16)
     plt.grid(True, linestyle="--", alpha=0.7)
 
     plt.annotate(model_equation, xy=(0.05, 0.95), xycoords="axes fraction",
-                 fontsize=10, bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8))
+                 fontsize=16, bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8))
 
     plt.tight_layout(w_pad=2, h_pad=2)
 
@@ -190,11 +190,11 @@ def create_combined_fit_plot(all_fits: list[FitData]) -> None:
                  label=f"{fit_data.name}: {fit_data.equation}")
 
     plt.title("Comparison of Algorithm Performance Fit Curves With Data Points", fontsize=16)
-    plt.xlabel("Number of Elements (n)", fontsize=14)
-    plt.ylabel("Execution Time (ns)", fontsize=14)
+    plt.xlabel("Number of Elements (n)", fontsize=16)
+    plt.ylabel("Execution Time (ns)", fontsize=16)
     plt.grid(True, linestyle="--", alpha=0.7)
     plt.ylim(0, y_max_with_buffer)
-    plt.legend(fontsize=10, loc="best")
+    plt.legend(fontsize=16, loc="best")
 
     plt.subplot(2, 1, 2)
 
@@ -203,11 +203,11 @@ def create_combined_fit_plot(all_fits: list[FitData]) -> None:
         plt.plot(x_combined, y_fit, linestyle="-", linewidth=2, label=f"{fit_data.name}: {fit_data.equation}")
 
     plt.title("Comparison of Algorithm Performance Fit Curves", fontsize=16)
-    plt.xlabel("Number of Elements (n)", fontsize=14)
-    plt.ylabel("Execution Time (ns)", fontsize=14)
+    plt.xlabel("Number of Elements (n)", fontsize=16)
+    plt.ylabel("Execution Time (ns)", fontsize=16)
     plt.grid(True, linestyle="--", alpha=0.7)
     plt.ylim(0, y_max_with_buffer)
-    plt.legend(fontsize=10, loc="best")
+    plt.legend(fontsize=16, loc="best")
 
     output_dir = "plots"
     os.makedirs(output_dir, exist_ok=True)
