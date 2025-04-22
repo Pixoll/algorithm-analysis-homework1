@@ -113,7 +113,7 @@ def process_csv_file(file_path: Path) -> FitData:
 
     plt.title(f"Mean execution time with standard deviation using {fit_data.type} - {base_filename}", fontsize=16)
     plt.xlabel("Number of Elements (n)", fontsize=16)
-    plt.ylabel("Mean Time (ns)", fontsize=16)
+    plt.ylabel("Execution time (ns)", fontsize=16)
     plt.grid(True, linestyle="--", alpha=0.7)
     plt.annotate(fit_data.equation, xy=(0.05, 0.95), xycoords="axes fraction",
                  fontsize=16, bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8))
@@ -126,8 +126,8 @@ def process_csv_file(file_path: Path) -> FitData:
     plt.plot(df["n"], df["t_Q3"], "d-", label="Q3")
     plt.plot(df["n"], df["t_Q4"], "x-", label="Maximum (Q4)")
     plt.title(f"Quartile values vs. Number of elements - {base_filename}", fontsize=16)
-    plt.xlabel("Number of Elements (n)", fontsize=16)
-    plt.ylabel("Time (ns)", fontsize=16)
+    plt.xlabel("Number of elements (n)", fontsize=16)
+    plt.ylabel("Execution time (ns)", fontsize=16)
     plt.legend(fontsize=16, loc="best")
     plt.grid(True, linestyle="--", alpha=0.7)
 
@@ -144,7 +144,7 @@ def process_csv_file(file_path: Path) -> FitData:
 
 def create_combined_fit_plot(all_fits: list[FitData]) -> None:
     """Create a plot combining all fit curves for comparison."""
-    plt.figure(figsize=(14, 20))
+    plt.figure(figsize=(21, 7))
 
     x_min = min([min(fit.x) for fit in all_fits])
     x_max = max([max(fit.x) for fit in all_fits])
@@ -155,27 +155,27 @@ def create_combined_fit_plot(all_fits: list[FitData]) -> None:
 
     x_combined = np.linspace(x_min, x_max, 200)
 
-    plt.subplot(2, 1, 1)
+    plt.subplot(1, 2, 1)
 
     for fit_data in all_fits:
         plt.scatter(fit_data.x, fit_data.y, s=50, alpha=0.4, label=fit_data.name)
 
     plt.title("Comparison of algorithm performance - data points", fontsize=16)
-    plt.xlabel("Number of Elements (n)", fontsize=16)
-    plt.ylabel("Execution Time (ns)", fontsize=16)
+    plt.xlabel("Number of elements (n)", fontsize=16)
+    plt.ylabel("Execution time (ns)", fontsize=16)
     plt.grid(True, linestyle="--", alpha=0.7)
     plt.ylim(0, y_max_with_buffer)
     plt.legend(fontsize=16, loc="best")
 
-    plt.subplot(2, 1, 2)
+    plt.subplot(1, 2, 2)
 
     for fit_data in all_fits:
         y_fit = fit_data.fit_func(x_combined)
         plt.plot(x_combined, y_fit, linestyle="-", linewidth=2, label=f"{fit_data.name}: {fit_data.equation}")
 
     plt.title("Comparison of algorithm performance - fit curves", fontsize=16)
-    plt.xlabel("Number of Elements (n)", fontsize=16)
-    plt.ylabel("Execution Time (ns)", fontsize=16)
+    plt.xlabel("Number of elements (n)", fontsize=16)
+    plt.ylabel("Execution time (ns)", fontsize=16)
     plt.grid(True, linestyle="--", alpha=0.7)
     plt.ylim(0, y_max_with_buffer)
     plt.legend(fontsize=16, loc="best")
