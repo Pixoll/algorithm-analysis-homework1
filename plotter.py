@@ -6,12 +6,16 @@ from typing import Union
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from pandas import DataFrame
 from pandas.core.arrays import ExtensionArray
 from scipy import optimize
 
 type ArrayLike = Union[ExtensionArray, np.ndarray]
 type PlotData = np.ndarray[tuple[int, ...], np.dtype]
 type FitFunc = Callable[[PlotData], PlotData] | np.poly1d
+
+PLOTS_DIR = "plots"
+os.makedirs(PLOTS_DIR, exist_ok=True)
 
 
 class FitData:
@@ -35,125 +39,101 @@ def nlog2n_function(x: PlotData, a: np.float64, b: np.float64) -> PlotData:
     return a * x * np.log2(x) ** 2 + b
 
 
+def plot_fit_data(df: DataFrame, base_filename: str, color: str) -> FitData:
+    x_trend = np.linspace(df["n"].min(), df["n"].max(), 100)
+    fit_data = FitData(base_filename, df["n"].values, df["t_mean"].values, x_trend)
+
+    try:
+        match base_filename.lower():
+            case "divide_and_conquer":
+                fit_data.type = "nlog²(n) fit"
+
+                params: Iterable[np.float64] = optimize.curve_fit(nlog2n_function, df["n"], df["t_mean"])[0]
+                a, b = params
+
+                y_trend = nlog2n_function(x_trend, a, b)
+                plt.plot(x_trend, y_trend, "--", linewidth=2, zorder=99, color=color)
+
+                fit_data.equation = f"{a:.4f} · nlog₂(n)² + {b:.2f}"
+                fit_data.fit_func = lambda x: nlog2n_function(x, a, b)
+
+            case "divide_and_conquer_improved":
+                fit_data.type = "nlog(n) fit"
+
+                params: Iterable[np.float64] = optimize.curve_fit(nlogn_function, df["n"], df["t_mean"])[0]
+                a, b = params
+
+                y_trend = nlogn_function(x_trend, a, b)
+                plt.plot(x_trend, y_trend, "--", linewidth=2, zorder=99, color=color)
+
+                fit_data.fit_func = lambda x: nlogn_function(x, a, b)
+                fit_data.equation = f"{a:.4f} · nlog₂(n) + {b:.2f}"
+
+            case _:
+                fit_data.type = "polynomial fit"
+
+                z = np.polyfit(df["n"], df["t_mean"], 2)
+                p = np.poly1d(z)
+                y_trend = p(x_trend)
+                plt.plot(x_trend, y_trend, "--", linewidth=2, zorder=99, color=color)
+
+                fit_data.fit_func = p
+                fit_data.equation = f"{z[0]:.4f}n² + {z[1]:.2f}n + {z[2]:.2f}"
+
+    except Exception as e:
+        print(f"Error fitting {fit_data.type} model: {e}. Falling back to polynomial fit.")
+
+        z = np.polyfit(df["n"], df["t_mean"], 2)
+        p = np.poly1d(z)
+        y_trend = p(x_trend)
+        plt.plot(x_trend, y_trend, "--", linewidth=2, zorder=99, color=color)
+
+        fit_data.fit_func = p
+        fit_data.equation = f"{z[0]:.4f}n² + {z[1]:.2f}n + {z[2]:.2f}"
+        fit_data.type = "polynomial fit"
+
+    return fit_data
+
+
 def process_csv_file(file_path: Path) -> FitData:
     """Process a single CSV file and create plots. Returns fit data for combined plot."""
     base_filename = os.path.splitext(os.path.basename(file_path))[0]
+    # noinspection PyUnresolvedReferences
+    colors: list[tuple[float, float, float]] = plt.cm.tab10.colors
 
     df = pd.read_csv(file_path)
+    plt.figure(figsize=(21, 7))
 
-    plt.figure(figsize=(21, 14))
+    # subplot 1
+    plt.subplot(1, 2, 1)
 
-    plt.subplot2grid((4, 4), (0, 0), 2, 2)
     plt.errorbar(df["n"], df["t_mean"], yerr=df["t_stdev"], fmt="o-", capsize=5,
-                 ecolor="red", color="blue", markersize=5)
-    plt.title(f"Mean Execution Time with Standard Deviation - {base_filename}", fontsize=16)
+                 ecolor=colors[1], color=colors[2], markersize=5)
+    fit_data = plot_fit_data(df, base_filename, "black")
+
+    plt.title(f"Mean execution time with standard deviation using {fit_data.type} - {base_filename}", fontsize=16)
     plt.xlabel("Number of Elements (n)", fontsize=16)
     plt.ylabel("Mean Time (ns)", fontsize=16)
     plt.grid(True, linestyle="--", alpha=0.7)
+    plt.annotate(fit_data.equation, xy=(0.05, 0.95), xycoords="axes fraction",
+                 fontsize=16, bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8))
 
-    plt.subplot2grid((4, 4), (0, 2), 2, 2)
+    # subplot 2
+    plt.subplot(1, 2, 2)
     plt.plot(df["n"], df["t_Q0"], "o-", label="Minimum (Q0)")
     plt.plot(df["n"], df["t_Q1"], "s-", label="Q1")
     plt.plot(df["n"], df["t_Q2"], "^-", label="Median (Q2)")
     plt.plot(df["n"], df["t_Q3"], "d-", label="Q3")
     plt.plot(df["n"], df["t_Q4"], "x-", label="Maximum (Q4)")
-    plt.title(f"Quartile Values vs. Number of Elements - {base_filename}", fontsize=16)
+    plt.title(f"Quartile values vs. Number of elements - {base_filename}", fontsize=16)
     plt.xlabel("Number of Elements (n)", fontsize=16)
     plt.ylabel("Time (ns)", fontsize=16)
     plt.legend(fontsize=16, loc="best")
     plt.grid(True, linestyle="--", alpha=0.7)
 
-    plt.subplot2grid((4, 4), (2, 1), 2, 2)
-    plt.scatter(df["n"], df["t_mean"], s=80, c="blue", alpha=0.7)
-
-    x_trend = np.linspace(df["n"].min(), df["n"].max(), 100)
-    fit_data = FitData(base_filename, df["n"].values, df["t_mean"].values, x_trend)
-
-    match base_filename.lower():
-        case "divide_and_conquer":
-            try:
-                params: Iterable[np.float64] = optimize.curve_fit(nlog2n_function, df["n"], df["t_mean"])[0]
-                a, b = params
-
-                y_trend = nlog2n_function(x_trend, a, b)
-
-                plt.plot(x_trend, y_trend, "r--", linewidth=2)
-
-                model_equation = f"{a:.4f} · nlog₂(n)² + {b:.2f}"
-                model_type = "nlog²(n) fit"
-
-                fit_data.fit_func = lambda x: nlog2n_function(x, a, b)
-                fit_data.equation = model_equation
-                fit_data.type = model_type
-
-            except Exception as e:
-                print(f"Error fitting nlog₂(n)² model: {e}. Falling back to polynomial fit.")
-                z = np.polyfit(df["n"], df["t_mean"], 2)
-                p = np.poly1d(z)
-                y_trend = p(x_trend)
-                plt.plot(x_trend, y_trend, "r--", linewidth=2)
-                model_equation = f"{z[0]:.4f}n² + {z[1]:.2f}n + {z[2]:.2f}"
-                model_type = "Polynomial fit"
-
-                fit_data.fit_func = p
-                fit_data.equation = model_equation
-                fit_data.type = model_type
-
-        case "divide_and_conquer_improved":
-            try:
-                params: Iterable[np.float64] = optimize.curve_fit(nlogn_function, df["n"], df["t_mean"])[0]
-                a, b = params
-
-                y_trend = nlogn_function(x_trend, a, b)
-
-                plt.plot(x_trend, y_trend, "r--", linewidth=2)
-
-                model_equation = f"{a:.4f} · nlog₂(n) + {b:.2f}"
-                model_type = "nlog(n) fit"
-
-                fit_data.fit_func = lambda x: nlogn_function(x, a, b)
-                fit_data.equation = model_equation
-                fit_data.type = model_type
-
-            except Exception as e:
-                print(f"Error fitting nlog₂(n) model: {e}. Falling back to polynomial fit.")
-                z = np.polyfit(df["n"], df["t_mean"], 2)
-                p = np.poly1d(z)
-                y_trend = p(x_trend)
-                plt.plot(x_trend, y_trend, "r--", linewidth=2)
-                model_equation = f"{z[0]:.4f}n² + {z[1]:.2f}n + {z[2]:.2f}"
-                model_type = "Polynomial fit"
-
-                fit_data.fit_func = p
-                fit_data.equation = model_equation
-                fit_data.type = model_type
-
-        case _:
-            z = np.polyfit(df["n"], df["t_mean"], 2)
-            p = np.poly1d(z)
-            y_trend = p(x_trend)
-            plt.plot(x_trend, y_trend, "r--", linewidth=2)
-            model_equation = f"{z[0]:.4f}n² + {z[1]:.2f}n + {z[2]:.2f}"
-            model_type = "Polynomial fit"
-
-            fit_data.fit_func = p
-            fit_data.equation = model_equation
-            fit_data.type = model_type
-
-    plt.title(f"Mean Time vs. Number of Elements with {model_type} - {base_filename}", fontsize=16)
-    plt.xlabel("Number of Elements (n)", fontsize=16)
-    plt.ylabel("Mean Time (ns)", fontsize=16)
-    plt.grid(True, linestyle="--", alpha=0.7)
-
-    plt.annotate(model_equation, xy=(0.05, 0.95), xycoords="axes fraction",
-                 fontsize=16, bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8))
-
     plt.tight_layout(w_pad=2, h_pad=2)
 
-    output_dir = "plots"
-    os.makedirs(output_dir, exist_ok=True)
-
-    output_path = os.path.join(output_dir, f"{base_filename}_analysis.png")
+    output_path = os.path.join(PLOTS_DIR, f"{base_filename}_analysis.png")
     plt.savefig(output_path, dpi=300)
     plt.close()  # Close the figure to free memory
 
@@ -177,19 +157,10 @@ def create_combined_fit_plot(all_fits: list[FitData]) -> None:
 
     plt.subplot(2, 1, 1)
 
-    # noinspection PyUnresolvedReferences
-    colors: list[tuple[float, float, float]] = plt.cm.tab10.colors
-    for i, fit_data in enumerate(all_fits):
-        color = colors[i % len(colors)]
+    for fit_data in all_fits:
+        plt.scatter(fit_data.x, fit_data.y, s=50, alpha=0.4, label=fit_data.name)
 
-        plt.scatter(fit_data.x, fit_data.y, s=50, alpha=0.4, color=color,
-                    label=f"{fit_data.name} (data)")
-
-        y_fit = fit_data.fit_func(x_combined)
-        plt.plot(x_combined, y_fit, linestyle="-", linewidth=2, color=color,
-                 label=f"{fit_data.name}: {fit_data.equation}")
-
-    plt.title("Comparison of Algorithm Performance Fit Curves With Data Points", fontsize=16)
+    plt.title("Comparison of algorithm performance - data points", fontsize=16)
     plt.xlabel("Number of Elements (n)", fontsize=16)
     plt.ylabel("Execution Time (ns)", fontsize=16)
     plt.grid(True, linestyle="--", alpha=0.7)
@@ -202,17 +173,14 @@ def create_combined_fit_plot(all_fits: list[FitData]) -> None:
         y_fit = fit_data.fit_func(x_combined)
         plt.plot(x_combined, y_fit, linestyle="-", linewidth=2, label=f"{fit_data.name}: {fit_data.equation}")
 
-    plt.title("Comparison of Algorithm Performance Fit Curves", fontsize=16)
+    plt.title("Comparison of algorithm performance - fit curves", fontsize=16)
     plt.xlabel("Number of Elements (n)", fontsize=16)
     plt.ylabel("Execution Time (ns)", fontsize=16)
     plt.grid(True, linestyle="--", alpha=0.7)
     plt.ylim(0, y_max_with_buffer)
     plt.legend(fontsize=16, loc="best")
 
-    output_dir = "plots"
-    os.makedirs(output_dir, exist_ok=True)
-
-    output_path = os.path.join(output_dir, "combined_fit_curves.png")
+    output_path = os.path.join(PLOTS_DIR, "combined_fit_curves.png")
     plt.tight_layout(w_pad=2, h_pad=2)
     plt.savefig(output_path, dpi=300)
     plt.close()
