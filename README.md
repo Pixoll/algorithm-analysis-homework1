@@ -2,7 +2,7 @@
 
 ## Preparation
 
-### Linux
+### Linux (only tested on Ubuntu)
 
 Nothing to do, all dependencies are automatically installed for you.
 
